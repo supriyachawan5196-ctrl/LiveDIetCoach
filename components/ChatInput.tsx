@@ -5,9 +5,11 @@ import { blobToBase64 } from '../utils/helpers';
 interface Props {
   onSendMessage: (text: string, image?: string) => void;
   isLoading: boolean;
+  quickReplies?: string[];
+  onQuickReplyClick?: (text: string) => void;
 }
 
-export const ChatInput: React.FC<Props> = ({ onSendMessage, isLoading }) => {
+export const ChatInput: React.FC<Props> = ({ onSendMessage, isLoading, quickReplies = [], onQuickReplyClick }) => {
   const [text, setText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,61 +54,78 @@ export const ChatInput: React.FC<Props> = ({ onSendMessage, isLoading }) => {
   }, [text]);
 
   return (
-    <div className="bg-white border-t border-gray-200 p-2 md:p-4 sticky bottom-0 w-full z-20 pb-safe">
-      {/* Image Preview */}
-      {selectedImage && (
-        <div className="flex items-center gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200 w-fit">
-            <div className="relative h-16 w-16 rounded overflow-hidden">
-                <img src={selectedImage} alt="Preview" className="h-full w-full object-cover" />
-            </div>
-            <button 
-                onClick={() => setSelectedImage(null)}
-                className="p-1 bg-gray-200 rounded-full hover:bg-gray-300 transition"
+    <div className="bg-white border-t border-gray-200 pb-safe z-20 sticky bottom-0 w-full">
+      {/* Quick Replies */}
+      {quickReplies.length > 0 && !isLoading && (
+        <div className="flex gap-2 p-3 overflow-x-auto whitespace-nowrap bg-gray-50 border-b border-gray-200 custom-scrollbar">
+          {quickReplies.map((reply, idx) => (
+            <button
+              key={idx}
+              onClick={() => onQuickReplyClick?.(reply)}
+              className="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-full text-sm font-medium hover:bg-emerald-50 transition-colors shadow-sm"
             >
-                <X size={14} className="text-gray-600" />
+              {reply}
             </button>
+          ))}
         </div>
       )}
 
-      <div className="flex items-end gap-2 max-w-4xl mx-auto">
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-3 text-gray-500 hover:text-emerald-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-          title="Add photo"
-          disabled={isLoading}
-        >
-          <ImageIcon size={24} />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-        />
+      <div className="p-2 md:p-4">
+        {/* Image Preview */}
+        {selectedImage && (
+            <div className="flex items-center gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200 w-fit">
+                <div className="relative h-16 w-16 rounded overflow-hidden">
+                    <img src={selectedImage} alt="Preview" className="h-full w-full object-cover" />
+                </div>
+                <button 
+                    onClick={() => setSelectedImage(null)}
+                    className="p-1 bg-gray-200 rounded-full hover:bg-gray-300 transition"
+                >
+                    <X size={14} className="text-gray-600" />
+                </button>
+            </div>
+        )}
 
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="flex-1 max-h-32 bg-gray-100 text-gray-800 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none overflow-y-auto"
-          rows={1}
-          disabled={isLoading}
-        />
+        <div className="flex items-end gap-2 max-w-4xl mx-auto">
+            <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 text-gray-500 hover:text-emerald-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+            title="Add photo"
+            disabled={isLoading}
+            >
+            <ImageIcon size={24} />
+            </button>
+            <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+            />
 
-        <button
-          onClick={handleSend}
-          disabled={isLoading || (!text.trim() && !selectedImage)}
-          className={`p-3 rounded-full flex-shrink-0 transition-all shadow-md ${
-            isLoading || (!text.trim() && !selectedImage)
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-105 active:scale-95'
-          }`}
-        >
-          {isLoading ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
-        </button>
+            <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            className="flex-1 max-h-32 bg-gray-100 text-gray-800 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none overflow-y-auto"
+            rows={1}
+            disabled={isLoading}
+            />
+
+            <button
+            onClick={handleSend}
+            disabled={isLoading || (!text.trim() && !selectedImage)}
+            className={`p-3 rounded-full flex-shrink-0 transition-all shadow-md ${
+                isLoading || (!text.trim() && !selectedImage)
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-105 active:scale-95'
+            }`}
+            >
+            {isLoading ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
+            </button>
+        </div>
       </div>
     </div>
   );
